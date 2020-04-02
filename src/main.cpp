@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 		while(getline(fs, line) )
 			sendCommand(hwnd, line);
 		fs.close();
-		fs.open(commandFile, ios::out | ios::trunc);
+		fs.open(commandFile, ios::out | ios::trunc);		// php czysci plik
 		fs.close();
 
 		Sleep(10);

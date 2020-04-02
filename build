@@ -1,0 +1,2 @@
+i686-w64-mingw32-g++ src/main.cpp -static -o remote-q3.exe
+
