@@ -1,5 +1,7 @@
 #include <windows.h>
 #include <iostream>
+#include <fstream>
+#include <string>
 
 using namespace std;
 
@@ -56,8 +58,26 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	sendCommand(hwnd, "map q3dm17");			// musza byc wielkie
-	
+	fstream fs;
+	string line;
+
+	while( 1 )
+	{
+		fs.open(commandFile, ios::in);
+		if( !fs.is_open() )
+		{
+			cout << "Cannot open " << commandFile << "\n";		// ciekawe jak bedzie z dostepem do pliku
+			system("pause");
+			return 1;
+		}
+		while(getline(fs, line) )
+			sendCommand(hwnd, line);
+		fs.close();
+		fs.open(commandFile, ios::out | ios::trunc);
+		fs.close();
+
+		Sleep(10);
+	}
 	system("pause");
 	return 0;
 
