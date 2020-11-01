@@ -5,43 +5,23 @@
 
 using namespace std;
 
+
+
 void sendCommand(HWND hwnd, const std::string &cm)
 {
-	//BYTE keys[ 256 ];
+	
 	for( int i = 0; i < cm.size(); ++i )
 	{
-		/*if( cm[i] == '\\')
-			PostMessage(hwnd, WM_KEYDOWN, VK_OEM_102, 1);
-		else if( cm[ i ] == '_' )
-		{
-			//PostMessage(hwnd, WM_KEYDOWN, VK_LSHIFT, 1);
-			
-			//GetKeyboardState(keys);
-			//cout << +keys[ VK_LSHIFT ] << "\n";
-			//keys[ VK_LSHIFT ] =255;
-			////cout << sizeof(keys[ VK_LSHIFT ]) << "\n";
-			//SetKeyboardState(keys);
-			//cout << +keys[ VK_LSHIFT ] << "\n";
-			PostMessage(hwnd, WM_CHAR, '_', 1);		// jeszcze trzeba shifta
-		}
-		else
-			PostMessage(hwnd, WM_KEYDOWN, toupper(cm[i]), 1);*/
 		SendMessage(hwnd, WM_CHAR, cm[ i ], 1);
 		Sleep(10);
 	}
 	PostMessage(hwnd, WM_KEYDOWN, VK_RETURN, 1);
 	Sleep(10);
 }
+	
 
 int main(int argc, char *argv[])
 {
-	/*DWORD dwPID;
-	GetWindowThreadProcessId(hwnd, &dwPID);
-	cout << "PID: " << dwPID << "\n";
-	DWORD hThread = GetWindowThreadProcessId(hwnd, &dwPID);
-	cout << "TID: " << hThread << "\n";*/
-
-
 	if( argc < 3 )
 	{
 		cout << "Pass name of window and file with commands\n";
@@ -57,7 +37,15 @@ int main(int argc, char *argv[])
 		cout << "Cannot get window handle\n";
 		return 1;
 	}
-
+	
+	if( argc > 4 )	// zeby dostac uchwyt do okna z konsola
+	{
+		POINT p;
+		p.x = stoi(argv[3]);
+		p.y = stoi(argv[4]);
+		hwnd = ChildWindowFromPoint(hwnd, p);
+	}
+	
 	fstream fs;
 	string line;
 
@@ -66,7 +54,7 @@ int main(int argc, char *argv[])
 		fs.open(commandFile, ios::in);
 		if( !fs.is_open() )
 		{
-			cout << "Cannot open " << commandFile << "\n";		// ciekawe jak bedzie z dostepem do pliku
+			cout << "Cannot open " << commandFile << "\n";
 			system("pause");
 			return 1;
 		}
