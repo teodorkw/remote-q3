@@ -1,50 +1,52 @@
-#include <windows.h>
+
 #include <iostream>
 #include <fstream>
 #include <string>
+#include <algorithm>
+#include <vector>
+
+#include "sender.h"
 
 using namespace std;
 
 
 
-void sendCommand(HWND hwnd, const std::string &cm)
+//void sendCommand(HWND hwnd, const std::string &cm)
+//{
+//	
+//	for( int i = 0; i < cm.size(); ++i )
+//	{
+//		SendMessageA(hwnd, WM_CHAR, cm[ i ], 1);		// SendInput?
+//			//cout << GetLastError() << endl;					// 1400 Invalid window handle. po zamknieciu okna
+//		Sleep(10);
+//	}
+//	//if( !PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1) )		// Post..., Send
+//	//	cout << GetLastError() << endl;
+//	//if( !PostMessageA(hwnd, WM_KEYUP, VK_RETURN, 1) )
+//	//	cout << GetLastError() << endl;
+//
+//	SendMessageA(hwnd, WM_CHAR, 13, 1);
+//
+//	
+//}
+
+
+
+
+	
+
+int main(int argc, char **argv)
 {
-	
-	for( int i = 0; i < cm.size(); ++i )
-	{
-		SendMessageA(hwnd, WM_CHAR, cm[ i ], 1);		// SendInput?
-			//cout << GetLastError() << endl;					// 1400 Invalid window handle. po zamknieciu okna
-		Sleep(10);
-	}
-	//if( !PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1) )		// Post..., Send
-	//	cout << GetLastError() << endl;
+	Sender sender;
+	sender.parse(argc, argv);
+	if( !sender.getHandle() )
+		return 1;
+	sender.proceed();
+	system("pause");
+	return 0;
 
-	
 
-	INPUT input[ 2 ];
-	memset(input, 0, sizeof(input));
-
-	input[ 0 ].type = input[ 1 ].type = INPUT_KEYBOARD;
-
-	HWND currentActiveHwnd = GetForegroundWindow();
-	SetForegroundWindow(hwnd);
-
-	input[ 0 ].ki.wVk = VK_RETURN;
-	input[ 0 ].ki.dwFlags = 0;
-	input[ 1 ].ki.wVk = VK_RETURN;
-	input[ 1 ].ki.dwFlags = KEYEVENTF_KEYUP;
-	SendInput(2, input, sizeof(INPUT));
-
-	if( cm.size() < 3 )		// dalej wywala jak 2 znaki albo mniej, za pierwszym razem dokleja enter do innego okna
-		Sleep(50);
-
-	SetForegroundWindow(currentActiveHwnd);
-}
-	
-
-int main(int argc, char *argv[])
-{
-	if( argc < 3 )
+	/*if( argc < 3 )
 	{
 		cout << "Pass name of window and file with commands\n";
 		return 1;
@@ -107,6 +109,6 @@ int main(int argc, char *argv[])
 		Sleep(10);
 	}
 	system("pause");
-	return 0;
+	return 0;*/
 
 }
