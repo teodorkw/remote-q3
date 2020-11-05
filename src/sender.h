@@ -4,6 +4,8 @@
 #include <string>
 #include <algorithm>
 #include <vector>
+#include <fstream>
+#include <iostream>
 
 class Sender
 {
@@ -169,10 +171,6 @@ public:
 															//cout << GetLastError() << endl;					// 1400 Invalid window handle. po zamknieciu okna
 			Sleep(delay);
 		}
-		//if( !PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1) )		// Post..., Send
-		//	cout << GetLastError() << endl;
-		//if( !PostMessageA(hwnd, WM_KEYUP, VK_RETURN, 1) )
-		//	cout << GetLastError() << endl;
 
 		if(sendEnterAsChar)
 			SendMessageA(hwnd, WM_CHAR, 13, 1);
