@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 	if( !sender.getHandle() )
 		return 1;
 	sender.proceed();
-	system("pause");
+	
 	return 0;
 
 

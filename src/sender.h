@@ -15,8 +15,9 @@ class Sender
 	bool sendEnterAsChar;
 	bool sendToChild;
 	int x, y;
+	int delay;
 public:
-	Sender() : sendEnterAsChar(false)
+	Sender() : sendEnterAsChar(false), delay(100)
 	{}
 	void parse(int argc, char **argv)
 	{
@@ -40,14 +41,34 @@ public:
 			}
 			else
 			{
-				x = stoi(coords.substr(0, comma));
-				y = stoi(coords.substr(comma + 1));
+				try
+				{
+					x = stoi(coords.substr(0, comma));
+					y = stoi(coords.substr(comma + 1));
+				}
+				catch( ... )
+				{
+					sendToChild = false;
+					std::cerr << "Warning: -c option ignored - pass coordinates as <x>,<y>\n";
+				}
+			}
+		}
+
+		std::string d;
+		if( findOption("-s", d) )
+		{
+			try
+			{
+				delay = stoi(d);
+			}
+			catch( ... )
+			{
+				std::cerr << "Warning: -s option ignored\n";
 			}
 		}
 
 		windowName = params[ 0 ];
 		commandFileName = params[ 1 ];
-		
 	}
 
 	bool findSwitch(std::string s)
@@ -63,6 +84,8 @@ public:
 	{
 		res = "";
 		auto it = std::find(params.begin(), params.end(), o);
+		if( it == params.end() - 1 )
+			std::cerr << "Warning: " << o << " option has no value\n";
 		if( it == params.end() || it == params.end() - 1 )
 			return false;
 		res = *( it + 1 );
@@ -144,7 +167,7 @@ public:
 		{
 			SendMessageA(hwnd, WM_CHAR, cm[ i ], 1);		// SendInput?
 															//cout << GetLastError() << endl;					// 1400 Invalid window handle. po zamknieciu okna
-			Sleep(10);
+			Sleep(delay);
 		}
 		//if( !PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1) )		// Post..., Send
 		//	cout << GetLastError() << endl;
@@ -157,6 +180,7 @@ public:
 		{
 			if( !PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1) )	
 				std::cout << GetLastError() << std::endl;
+			Sleep(delay);
 			if( !PostMessageA(hwnd, WM_KEYUP, VK_RETURN, 1) )
 				std::cout << GetLastError() << std::endl;
 		}
