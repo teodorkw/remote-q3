@@ -20,7 +20,7 @@ Parameters:
 * `command_file` - file from which commands are read.
 * `-a` - enter is sent as WM_CHAR instead of WM_KEYDOWN and WM_KEYUP (proper way must be proven experimentally).
 * `-c <x>,<y>` - coordinates of child window according to main window's top left corner. Use if main window has distinct child window for taking commands. Program searches for the top window in that location.
-* `-s <delay>` - time delay between each command (characters and enter key) in milliseconds. Default is 100.
+* `-s <delay>` - time delay between each character in command in milliseconds. Default is 100.
 
 # 3. Tested games
 
