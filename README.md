@@ -24,7 +24,7 @@ Parameters:
 
 # 3. Tested games
 
-## Quake III Arena
+## 3.1 Quake III Arena
 
 ### Regular dedicated server (`quake3.exe`)
 
@@ -38,7 +38,7 @@ Parameters:
 
 Currently `send-keystroke` is not able to efficiently send commands to such window, although [Spy++](https://docs.microsoft.com/en-gb/visualstudio/debugger/introducing-spy-increment?view=vs-2019) shows that window receives sent ones.
 
-## Unreal Tournament
+## 3.2 Unreal Tournament
 
 ### Dedicated server (`UnrealTournament.exe`)
 
