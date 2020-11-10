@@ -112,29 +112,30 @@ public:
 		p.x = x;
 		p.y = y;
 		HWND oldHwnd, newHwnd;
+		RECT rect, rect2;
+		GetWindowRect(hwnd, &rect);
 		oldHwnd = hwnd;
 		do
 		{
 			newHwnd = ChildWindowFromPoint(oldHwnd, p);
-			//std::cout << newHwnd << std::endl;
 			if( newHwnd == NULL )
 				break;
 			if( newHwnd == oldHwnd )
 				break;
 			oldHwnd = newHwnd;
 
-			//oldHwnd = newHwnd;
-			//newHwnd = ChildWindowFromPoint(oldHwnd, p);
-			
-			p.x = 0;		// reset
-			p.y = 0;
+			GetWindowRect(newHwnd, &rect2);
+						
+			p.x -= (rect2.left - rect.left);
+			p.y -= (rect2.top - rect.top);
+			rect = rect2;
 		}
 		while( 1 );
 		if( hwnd == oldHwnd )
 			std::cerr << "Warning: no child window detected - using main window instead\n";
+		else
+			std::cout << "Child window handle: " << oldHwnd << std::endl;
 		hwnd = oldHwnd;
-
-		std::cout << "Child window handle: " << hwnd << std::endl;
 
 		return true;
 	}
