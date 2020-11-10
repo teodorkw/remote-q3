@@ -44,6 +44,8 @@ Currently `send-keystroke` is not able to efficiently send commands to such wind
 
 `send-keystroke "Depot: DM-depot.unr (0 players)" commands.txt -a -c 50,50`
 
-## 4. Known bugs
+## 4. Known issues
 
-* Program doesn't notice window's closing
+* Program doesn't notice window's closing,
+
+* target window must not be minimized during calling `send-keystroke`.
