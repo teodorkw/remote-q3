@@ -112,23 +112,20 @@ public:
 		p.x = x;
 		p.y = y;
 		HWND oldHwnd, newHwnd;
-		RECT rect, rect2;
-		GetWindowRect(hwnd, &rect);
 		oldHwnd = hwnd;
+		RECT rr;
 		do
 		{
 			newHwnd = ChildWindowFromPoint(oldHwnd, p);
-			if( newHwnd == NULL )
+			if( newHwnd == NULL || newHwnd == oldHwnd )
 				break;
-			if( newHwnd == oldHwnd )
-				break;
-			oldHwnd = newHwnd;
 
-			GetWindowRect(newHwnd, &rect2);
-						
-			p.x -= (rect2.left - rect.left);
-			p.y -= (rect2.top - rect.top);
-			rect = rect2;
+			GetClientRect(newHwnd, &rr);
+			MapWindowPoints(oldHwnd, newHwnd, LPPOINT(&rr), 2);
+
+			p.x += rr.left;
+			p.y += rr.top;
+			oldHwnd = newHwnd;
 		}
 		while( 1 );
 		if( hwnd == oldHwnd )
