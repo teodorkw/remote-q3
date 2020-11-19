@@ -6,6 +6,9 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <queue>
+#include <thread>
+#include <mutex>
 
 class Sender
 {
@@ -13,6 +16,8 @@ class Sender
 	HWND hwnd;
 
 	std::vector<std::string> params;
+	std::queue<std::string> messageQueue;
+	std::mutex mux;
 
 	bool sendEnterAsChar;
 	bool sendToChild;
@@ -21,6 +26,7 @@ class Sender
 public:
 	Sender() : sendEnterAsChar(false), delay(100)
 	{}
+
 	void parse(int argc, char **argv)
 	{
 		params.resize(argc - 1);
@@ -139,19 +145,31 @@ public:
 
 	bool proceed()
 	{
+		std::thread readThread(&Sender::readCommandsFromFile, this);
+		std::thread sendThread(&Sender::sendCommands, this);
+
+		readThread.join();
+		sendThread.join();
+		return true;
+	}
+
+	bool readCommandsFromFile()
+	{
 		std::fstream fs;
 		std::string line;
 
-		while( 1 )
+		while (1)
 		{
 			fs.open(commandFileName, std::ios::in);
-			if( !fs.is_open() )
+			if (!fs.is_open())
 			{
 				std::cerr << "Cannot open " << commandFileName << "\n";
 				return false;
 			}
-			while( getline(fs, line) )
-				sendCommand(line);
+			mux.lock();
+			while (getline(fs, line))
+				messageQueue.push(line);
+			mux.unlock();
 			fs.close();
 			fs.open(commandFileName, std::ios::out | std::ios::trunc);		// web app empties file anyway
 			fs.close();
@@ -161,26 +179,41 @@ public:
 		return true;
 	}
 
-	void sendCommand(const std::string &cm)
+	void sendCommands()
 	{
-		for( int i = 0; i < cm.size(); ++i )
+		std::string cm;
+		bool send = false;
+		while(1)
 		{
-			SendMessageA(hwnd, WM_CHAR, cm[ i ], 1);		// SendInput?
-															//cout << GetLastError() << endl;					// 1400 Invalid window handle. po zamknieciu okna
-			Sleep(delay);
-		}
+			mux.lock();
+			if(!messageQueue.empty())
+			{
+				cm = messageQueue.front();
+				messageQueue.pop();
+				send = true;
+			}
+			mux.unlock();
+			if(send)
+			{
+				for(int i = 0; i < cm.size(); ++i)
+				{
+					SendMessageA(hwnd, WM_CHAR, cm[i], 1);		// SendInput?
+																	//cout << GetLastError() << endl;					// 1400 Invalid window handle. po zamknieciu okna
+					Sleep(delay);
+				}
 
-		if(sendEnterAsChar)
-			SendMessageA(hwnd, WM_CHAR, 13, 1);
-		else
-		{
-			if( !PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1) )	
-				std::cout << GetLastError() << std::endl;
-			Sleep(delay);
-			if( !PostMessageA(hwnd, WM_KEYUP, VK_RETURN, 1) )
-				std::cout << GetLastError() << std::endl;
-		}
-
-
+				if (sendEnterAsChar)
+					SendMessageA(hwnd, WM_CHAR, 13, 1);
+				else
+				{
+					if (!PostMessageA(hwnd, WM_KEYDOWN, VK_RETURN, 1))
+						std::cout << GetLastError() << std::endl;
+					Sleep(delay);
+					if (!PostMessageA(hwnd, WM_KEYUP, VK_RETURN, 1))
+						std::cout << GetLastError() << std::endl;
+				}
+				send = false;
+			}//if(send)
+		}//while(1)
 	}
 };
