@@ -25,8 +25,9 @@ class Sender
 	bool sendToChild;
 	int x, y;
 	int delay;
+	int maxCommandLength;
 public:
-	Sender() : sendEnterAsChar(false), delay(100), commandFileAvailable(true)
+	Sender() : sendEnterAsChar(false), delay(100), commandFileAvailable(true), maxCommandLength(50)
 	{}
 
 	void parse(int argc, char **argv)
@@ -74,6 +75,22 @@ public:
 			catch( ... )
 			{
 				std::cerr << "Warning: -s option ignored\n";
+			}
+		}
+
+		std::string l;
+		if (findOption("-l", l))
+		{
+			try
+			{
+				maxCommandLength = stoi(l);
+				if (maxCommandLength > 100 || maxCommandLength < 1)
+					throw "";
+			}
+			catch (...)
+			{
+				maxCommandLength = 50;
+				std::cerr << "Warning: -l option ignored, pass number in range [1, 100]\n";
 			}
 		}
 
@@ -171,7 +188,8 @@ public:
 			}
 			mux.lock();
 			while (getline(fs, line))
-				messageQueue.push(line);
+				if(line.length() <= maxCommandLength)
+					messageQueue.push(line);
 			mux.unlock();
 			fs.close();
 			fs.open(commandFileName, std::ios::out | std::ios::trunc);		// web app empties file anyway
