@@ -9,6 +9,7 @@
 #include <queue>
 #include <thread>
 #include <mutex>
+#include <atomic>
 
 class Sender
 {
@@ -18,13 +19,14 @@ class Sender
 	std::vector<std::string> params;
 	std::queue<std::string> messageQueue;
 	std::mutex mux;
+	std::atomic<bool> commandFileAvailable;
 
 	bool sendEnterAsChar;
 	bool sendToChild;
 	int x, y;
 	int delay;
 public:
-	Sender() : sendEnterAsChar(false), delay(100)
+	Sender() : sendEnterAsChar(false), delay(100), commandFileAvailable(true)
 	{}
 
 	void parse(int argc, char **argv)
@@ -164,6 +166,7 @@ public:
 			if (!fs.is_open())
 			{
 				std::cerr << "Cannot open " << commandFileName << "\n";
+				commandFileAvailable = false;
 				return false;
 			}
 			mux.lock();
@@ -174,7 +177,7 @@ public:
 			fs.open(commandFileName, std::ios::out | std::ios::trunc);		// web app empties file anyway
 			fs.close();
 
-			Sleep(10);
+			Sleep(100);
 		}
 		return true;
 	}
@@ -185,14 +188,17 @@ public:
 		bool send = false;
 		while(1)
 		{
-			mux.lock();
-			if(!messageQueue.empty())
 			{
-				cm = messageQueue.front();
-				messageQueue.pop();
-				send = true;
+				std::lock_guard<std::mutex> g(mux);
+				if (!messageQueue.empty())
+				{
+					cm = messageQueue.front();
+					messageQueue.pop();
+					send = true;
+				}
+				else if (!commandFileAvailable)
+					return;
 			}
-			mux.unlock();
 			if(send)
 			{
 				for(int i = 0; i < cm.size(); ++i)
