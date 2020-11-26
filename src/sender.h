@@ -30,7 +30,7 @@ public:
 	Sender() : sendEnterAsChar(false), delay(100), commandFileAvailable(true), maxCommandLength(50)
 	{}
 
-	void parse(int argc, char **argv)
+	bool parse(int argc, char **argv)
 	{
 		params.resize(argc - 1);
 		transform(argv + 1, argv + argc, params.begin(),
@@ -94,8 +94,14 @@ public:
 			}
 		}
 
+		if (params.size() < 2)
+		{
+			std::cerr << "Specify both window name and command file\n";
+			return false;
+		}
 		windowName = params[ 0 ];
 		commandFileName = params[ 1 ];
+		return true;
 	}
 
 	bool findSwitch(std::string s)
