@@ -47,6 +47,6 @@ Currently `send-keystroke` is not able to efficiently send commands to such wind
 
 ## 4. Known issues
 
-* Program doesn't notice window's closing,
+* ~~Program doesn't notice window's closing~~,
 
 * target window must not be minimized during calling `send-keystroke`.
