@@ -15,11 +15,12 @@ class Sender
 {
 	std::string windowName, commandFileName;
 	HWND hwnd;
+	DWORD threadId;
 
 	std::vector<std::string> params;
 	std::queue<std::string> messageQueue;
 	std::mutex mux;
-	std::atomic<bool> commandFileAvailable;
+	std::atomic<bool> commandFileAvailable, windowAvailable;
 
 	bool sendEnterAsChar;
 	bool sendToChild;
@@ -27,7 +28,7 @@ class Sender
 	int delay;
 	int maxCommandLength;
 public:
-	Sender() : sendEnterAsChar(false), delay(100), commandFileAvailable(true), maxCommandLength(50)
+	Sender() : sendEnterAsChar(false), delay(100), commandFileAvailable(true), windowAvailable(true), maxCommandLength(50)
 	{}
 
 	bool parse(int argc, char **argv)
@@ -135,36 +136,37 @@ public:
 			return false;
 		}
 		std::cout << "Main window handle: " << hwnd << std::endl;
-		if( !sendToChild )		// just main window
-			return true;	
 
-		// child:
-		POINT p;
-		p.x = x;
-		p.y = y;
-		HWND oldHwnd, newHwnd;
-		oldHwnd = hwnd;
-		RECT rr;
-		do
+		if (sendToChild)
 		{
-			newHwnd = ChildWindowFromPoint(oldHwnd, p);
-			if( newHwnd == NULL || newHwnd == oldHwnd )
-				break;
+			// child:
+			POINT p;
+			p.x = x;
+			p.y = y;
+			HWND oldHwnd, newHwnd;
+			oldHwnd = hwnd;
+			RECT rr;
+			do
+			{
+				newHwnd = ChildWindowFromPoint(oldHwnd, p);
+				if (newHwnd == NULL || newHwnd == oldHwnd)
+					break;
 
-			GetClientRect(newHwnd, &rr);
-			MapWindowPoints(oldHwnd, newHwnd, LPPOINT(&rr), 2);
+				GetClientRect(newHwnd, &rr);
+				MapWindowPoints(oldHwnd, newHwnd, LPPOINT(&rr), 2);
 
-			p.x += rr.left;
-			p.y += rr.top;
-			oldHwnd = newHwnd;
-		}
-		while( 1 );
-		if( hwnd == oldHwnd )
-			std::cerr << "Warning: no child window detected - using main window instead\n";
-		else
-			std::cout << "Child window handle: " << oldHwnd << std::endl;
-		hwnd = oldHwnd;
+				p.x += rr.left;
+				p.y += rr.top;
+				oldHwnd = newHwnd;
+			} while (1);
+			if (hwnd == oldHwnd)
+				std::cerr << "Warning: no child window detected - using main window instead\n";
+			else
+				std::cout << "Child window handle: " << oldHwnd << std::endl;
+			hwnd = oldHwnd;
+		}//if (sendToChild)
 
+		threadId = GetWindowThreadProcessId(hwnd, NULL);		// remember which thread created window
 		return true;
 	}
 
@@ -185,6 +187,12 @@ public:
 
 		while (1)
 		{
+			if (!isAppropriateWindow())
+			{
+				std::cerr << "Window has been destroyed\n";
+				windowAvailable = false;
+				return false;
+			}
 			fs.open(commandFileName, std::ios::in);
 			if (!fs.is_open())
 			{
@@ -212,6 +220,8 @@ public:
 		bool send = false;
 		while(1)
 		{
+			if (!windowAvailable)
+				return;
 			{
 				std::lock_guard<std::mutex> g(mux);
 				if (!messageQueue.empty())
@@ -245,5 +255,10 @@ public:
 				send = false;
 			}//if(send)
 		}//while(1)
+	}
+
+	bool isAppropriateWindow()		// crude checking if the window still exist and is the valid window
+	{
+		return IsWindow(hwnd) && GetWindowThreadProcessId(hwnd, NULL) == threadId;
 	}
 };
